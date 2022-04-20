@@ -1,0 +1,18 @@
+{
+  "extends": "@tsconfig/node16/tsconfig.json",
+  "compilerOptions": {
+      "outDir": "app/js",
+      "noEmitOnError": true,
+      "noImplicitAny": true,
+      "removeComments": true,
+      "module": "system",
+      "strictNullChecks": true,
+      "experimentalDecorators": true,
+  },
+  "include": [
+      "app/ts/**/*"
+  ],
+  "exclude": [
+    "node_modules"
+  ],
+}
