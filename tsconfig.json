@@ -5,7 +5,6 @@
       "noEmitOnError": true,
       "noImplicitAny": true,
       "removeComments": true,
-      "module": "system",
       "strictNullChecks": true,
       "experimentalDecorators": true,
   },

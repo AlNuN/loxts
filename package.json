@@ -6,7 +6,8 @@
   "scripts": {
     "test": "test",
     "compile": "tsc",
-    "watch": "tsc -w"
+    "watch": "tsc -w",
+    "tsLox": "node app/js/index.js"
   },
   "keywords": [
     "programming-language"
