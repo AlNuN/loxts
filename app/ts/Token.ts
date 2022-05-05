@@ -9,6 +9,6 @@ export default class Token {
   ) {}
 
   public toString(): string {
-    return `${this.type} ${this.lexeme} ${this.literal}`
+    return `${this.type} ${this.lexeme} ${this.literal?.toString()}`
   }
 }

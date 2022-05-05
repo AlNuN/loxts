@@ -7,7 +7,9 @@
     "test": "test",
     "compile": "tsc",
     "watch": "tsc -w",
-    "tsLox": "node app/js/index.js"
+    "tsLox": "node app/js/index.js",
+    "generate": "node app/js/tool/GenerateAst.js",
+    "test-printer": "node app/js/AstPrinter.js"
   },
   "keywords": [
     "programming-language"
