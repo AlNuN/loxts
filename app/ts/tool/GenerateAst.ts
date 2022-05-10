@@ -78,7 +78,7 @@ const classes: Array<GeneratedClass> = [
   },
   {
     className: "Literal",
-    fields: ['value: Object']
+    fields: ['value: Object|null']
   },
   {
     className: "Unary",

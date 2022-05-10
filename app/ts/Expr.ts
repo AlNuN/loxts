@@ -40,8 +40,8 @@
     }
     
     export class Literal extends Expr {
-      public value: Object
-      constructor(value: Object) { 
+      public value: Object|null
+      constructor(value: Object|null) { 
         super() 
         this.value = value
       }

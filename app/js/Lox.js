@@ -7,6 +7,9 @@ const process_1 = require("process");
 const fs_1 = __importDefault(require("fs"));
 const readline_1 = __importDefault(require("readline"));
 const Scanner_1 = __importDefault(require("./Scanner"));
+const TokenType_1 = require("./TokenType");
+const Parser_1 = __importDefault(require("./Parser"));
+const AstPrinter_1 = require("./AstPrinter");
 class Lox {
     constructor(args) {
         this.args = args;
@@ -50,7 +53,12 @@ class Lox {
             (0, process_1.exit)(65);
         const scanner = new Scanner_1.default(source);
         const tokens = scanner.scanTokens();
-        console.log(tokens);
+        const parser = new Parser_1.default(tokens);
+        const expression = parser.parse();
+        const printer = new AstPrinter_1.AstPrinter();
+        if (Lox.hadError)
+            return;
+        console.log(printer.print(expression));
     }
     static error(line, message) {
         Lox.report(line, "", message);
@@ -58,6 +66,14 @@ class Lox {
     static report(line, where, message) {
         console.error(`[line ${line}] Error${where}: ${message}`);
         this.hadError = true;
+    }
+    static errorT(token, message) {
+        if (token.type == TokenType_1.TokenType.EOF) {
+            Lox.report(token.line, " at end", message);
+        }
+        else {
+            Lox.report(token.line, ` at '${token.lexeme}' `, message);
+        }
     }
 }
 exports.default = Lox;

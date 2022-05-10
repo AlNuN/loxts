@@ -66,7 +66,7 @@ const classes = [
     },
     {
         className: "Literal",
-        fields: ['value: Object']
+        fields: ['value: Object|null']
     },
     {
         className: "Unary",

@@ -3,6 +3,10 @@ import fs from 'fs'
 import readline from 'readline'
 import Scanner from './Scanner'
 import Token from './Token'
+import { TokenType } from './TokenType'
+import Parser from './Parser'
+import { Expr } from './Expr'
+import { AstPrinter } from './AstPrinter'
 
 export default class Lox {
   private args : Array<string>
@@ -56,7 +60,13 @@ export default class Lox {
 
     const tokens: Array<Token> = scanner.scanTokens()
 
-    console.log(tokens)
+    const parser: Parser = new Parser(tokens)
+    const expression: Expr|null = parser.parse()
+    const printer = new AstPrinter()
+
+    if (Lox.hadError) return
+
+    console.log(printer.print(expression))
   }
 
   public static error(line :number, message: string): void {
@@ -66,5 +76,13 @@ export default class Lox {
   public static report(line :number, where: string, message: string): void {
     console.error(`[line ${line}] Error${where}: ${message}`)
     this.hadError = true
+  }
+
+  public static errorT(token: Token, message: string): void {
+    if (token.type == TokenType.EOF) {
+      Lox.report(token.line, " at end", message)
+    } else {
+      Lox.report(token.line, ` at '${token.lexeme}' `, message)
+    }
   }
 }
