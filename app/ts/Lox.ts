@@ -6,11 +6,14 @@ import Token from './Token'
 import { TokenType } from './TokenType'
 import Parser from './Parser'
 import { Expr } from './Expr'
-import { AstPrinter } from './AstPrinter'
+import RuntimeError from './RuntimeError'
+import Interpreter from './Interpreter'
 
 export default class Lox {
   private args : Array<string>
+  private static interpreter: Interpreter = new Interpreter();
   static hadError = false
+  static hadRuntimeError = false
 
   constructor(args: Array<string>) {
     this.args = args
@@ -46,6 +49,7 @@ export default class Lox {
       if (!line === null) rl.close()
       _this.run(line)
       Lox.hadError = false
+      Lox.hadRuntimeError = false
       rl.prompt()
     }).on('close', function () {
       console.log('\nHave a nice day!')
@@ -55,18 +59,17 @@ export default class Lox {
 
   private run(source: string): void {
     if (Lox.hadError) exit(65)
+    if (Lox.hadRuntimeError) exit(70)
 
     const scanner = new Scanner(source)
-
     const tokens: Array<Token> = scanner.scanTokens()
 
     const parser: Parser = new Parser(tokens)
     const expression: Expr|null = parser.parse()
-    const printer = new AstPrinter()
 
-    if (Lox.hadError) return
+    if (Lox.hadError || expression === null) return
 
-    console.log(printer.print(expression))
+    Lox.interpreter.interpret(expression)
   }
 
   public static error(line :number, message: string): void {
@@ -84,5 +87,11 @@ export default class Lox {
     } else {
       Lox.report(token.line, ` at '${token.lexeme}' `, message)
     }
+  }
+
+  public static runtimeError(error: RuntimeError): void {
+    console.error(`${error.message}`)
+    console.error(`[line ${error.token.line}]`)
+    Lox.hadRuntimeError = true
   }
 }

@@ -9,7 +9,7 @@ const readline_1 = __importDefault(require("readline"));
 const Scanner_1 = __importDefault(require("./Scanner"));
 const TokenType_1 = require("./TokenType");
 const Parser_1 = __importDefault(require("./Parser"));
-const AstPrinter_1 = require("./AstPrinter");
+const Interpreter_1 = __importDefault(require("./Interpreter"));
 class Lox {
     constructor(args) {
         this.args = args;
@@ -42,6 +42,7 @@ class Lox {
                 rl.close();
             _this.run(line);
             Lox.hadError = false;
+            Lox.hadRuntimeError = false;
             rl.prompt();
         }).on('close', function () {
             console.log('\nHave a nice day!');
@@ -51,14 +52,15 @@ class Lox {
     run(source) {
         if (Lox.hadError)
             (0, process_1.exit)(65);
+        if (Lox.hadRuntimeError)
+            (0, process_1.exit)(70);
         const scanner = new Scanner_1.default(source);
         const tokens = scanner.scanTokens();
         const parser = new Parser_1.default(tokens);
         const expression = parser.parse();
-        const printer = new AstPrinter_1.AstPrinter();
-        if (Lox.hadError)
+        if (Lox.hadError || expression === null)
             return;
-        console.log(printer.print(expression));
+        Lox.interpreter.interpret(expression);
     }
     static error(line, message) {
         Lox.report(line, "", message);
@@ -75,6 +77,13 @@ class Lox {
             Lox.report(token.line, ` at '${token.lexeme}' `, message);
         }
     }
+    static runtimeError(error) {
+        console.error(`${error.message}`);
+        console.error(`[line ${error.token.line}]`);
+        Lox.hadRuntimeError = true;
+    }
 }
 exports.default = Lox;
+Lox.interpreter = new Interpreter_1.default();
 Lox.hadError = false;
+Lox.hadRuntimeError = false;
