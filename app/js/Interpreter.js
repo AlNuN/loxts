@@ -7,10 +7,11 @@ const Lox_1 = __importDefault(require("./Lox"));
 const RuntimeError_1 = __importDefault(require("./RuntimeError"));
 const TokenType_1 = require("./TokenType");
 class Interpreter {
-    interpret(expression) {
+    interpret(statements) {
         try {
-            let value = this.evaluate(expression);
-            console.log(this.stringify(value));
+            for (let statement of statements) {
+                this.execute(statement);
+            }
         }
         catch (error) {
             if (error instanceof RuntimeError_1.default) {
@@ -71,6 +72,16 @@ class Interpreter {
     }
     evaluate(expr) {
         return expr.accept(this);
+    }
+    execute(stmt) {
+        stmt.accept(this);
+    }
+    visitExpressionStmt(stmt) {
+        this.evaluate(stmt.expression);
+    }
+    visitPrintStmt(stmt) {
+        const value = this.evaluate(stmt.expression);
+        console.log(this.stringify(value));
     }
     visitBinaryExpr(expr) {
         let left = this.evaluate(expr.left);

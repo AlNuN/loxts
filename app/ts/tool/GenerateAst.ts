@@ -7,7 +7,7 @@ interface GeneratedClass {
 }
 
 class GenerateAst {
-  public static defineAst(outputDir: string, baseName: string, types: Array<GeneratedClass>): void {
+  public static defineAst(outputDir: string, baseName: string, types: Array<GeneratedClass>, imports: string): void {
     const path:string = `${outputDir}/${baseName}.ts`
 
     let classes: string = ''
@@ -17,7 +17,7 @@ class GenerateAst {
     let visitor = this.defineVisitor(baseName, types)
     const data:string = `
       // This is a generated file from GenerateAst.ts
-      import Token from "./Token"
+      ${imports}
 
       ${visitor}
 
@@ -29,7 +29,6 @@ class GenerateAst {
     `
 
     writeFileSync(path, data, { encoding: "utf-8" });
-    exit(0)
   }
 
   private static defineType(baseName: string, className: string, fields: Array<string>): string {
@@ -67,7 +66,7 @@ if (process.argv.length != 3) {
 
 let outputDir = process.argv[2];
 
-const classes: Array<GeneratedClass> = [
+const exprClasses: Array<GeneratedClass> = [
   {
     className: "Binary",
     fields: ['left: Expr', 'operator: Token', 'right: Expr'],
@@ -86,4 +85,17 @@ const classes: Array<GeneratedClass> = [
   },
 ]
 
-GenerateAst.defineAst(outputDir, 'Expr', classes)
+GenerateAst.defineAst(outputDir, 'Expr', exprClasses, 'import Token from "./Token"')
+
+const stmtClasses: Array<GeneratedClass> = [
+  {
+    className: "Expression",
+    fields: ['expression: Expr']
+  },
+  {
+    className: "Print",
+    fields: ['expression: Expr']
+  },
+]
+
+GenerateAst.defineAst(outputDir, 'Stmt', stmtClasses, 'import { Expr } from "./Expr"')

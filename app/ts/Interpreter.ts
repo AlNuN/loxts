@@ -1,15 +1,19 @@
-import { Binary, Expr, Grouping, Literal, Unary, Visitor } from "./Expr";
+import { Binary, Expr, Grouping, Literal, Unary, Visitor as ExprVisitor } from "./Expr";
 import Lox from "./Lox";
 import RuntimeError from "./RuntimeError";
+import { Expression, Print, Stmt, Visitor as StmtVisitor } from "./Stmt";
 import Token from "./Token";
 import { TokenType } from "./TokenType";
 
-export default class Interpreter implements Visitor<any> {
-
-  public interpret(expression: Expr):void {
+export default class Interpreter implements 
+  ExprVisitor<any>,
+  StmtVisitor<void>
+{
+  public interpret(statements: Array<Stmt>):void {
     try {
-      let value: any = this.evaluate(expression)
-      console.log(this.stringify(value))
+      for (let statement of statements) {
+        this.execute(statement)
+      }
     } catch (error) {
       if (error instanceof RuntimeError) {
         Lox.runtimeError(error)
@@ -76,6 +80,19 @@ export default class Interpreter implements Visitor<any> {
 
   private evaluate(expr: Expr): any {
     return expr.accept(this)
+  }
+
+  private execute(stmt: Stmt): void {
+    stmt.accept(this)
+  }
+
+  public visitExpressionStmt(stmt: Expression): void {
+    this.evaluate(stmt.expression)
+  }
+
+  public visitPrintStmt(stmt: Print): void {
+    const value: any = this.evaluate(stmt.expression)
+    console.log(this.stringify(value))
   }
 
   public visitBinaryExpr(expr: Binary): any {

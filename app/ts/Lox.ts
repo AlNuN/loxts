@@ -8,6 +8,7 @@ import Parser from './Parser'
 import { Expr } from './Expr'
 import RuntimeError from './RuntimeError'
 import Interpreter from './Interpreter'
+import { Stmt } from './Stmt'
 
 export default class Lox {
   private args : Array<string>
@@ -65,11 +66,11 @@ export default class Lox {
     const tokens: Array<Token> = scanner.scanTokens()
 
     const parser: Parser = new Parser(tokens)
-    const expression: Expr|null = parser.parse()
+    const statements: Array<Stmt> = parser.parse()
 
-    if (Lox.hadError || expression === null) return
+    if (Lox.hadError) return
 
-    Lox.interpreter.interpret(expression)
+    Lox.interpreter.interpret(statements)
   }
 
   public static error(line :number, message: string): void {

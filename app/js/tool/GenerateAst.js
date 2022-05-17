@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = require("fs");
 const process_1 = require("process");
 class GenerateAst {
-    static defineAst(outputDir, baseName, types) {
+    static defineAst(outputDir, baseName, types, imports) {
         const path = `${outputDir}/${baseName}.ts`;
         let classes = '';
         types.forEach(v => {
@@ -12,7 +12,7 @@ class GenerateAst {
         let visitor = this.defineVisitor(baseName, types);
         const data = `
       // This is a generated file from GenerateAst.ts
-      import Token from "./Token"
+      ${imports}
 
       ${visitor}
 
@@ -23,7 +23,6 @@ class GenerateAst {
       ${classes}
     `;
         (0, fs_1.writeFileSync)(path, data, { encoding: "utf-8" });
-        (0, process_1.exit)(0);
     }
     static defineType(baseName, className, fields) {
         return `
@@ -55,7 +54,7 @@ if (process.argv.length != 3) {
     (0, process_1.exit)(65);
 }
 let outputDir = process.argv[2];
-const classes = [
+const exprClasses = [
     {
         className: "Binary",
         fields: ['left: Expr', 'operator: Token', 'right: Expr'],
@@ -73,4 +72,15 @@ const classes = [
         fields: ['operator: Token', 'right: Expr']
     },
 ];
-GenerateAst.defineAst(outputDir, 'Expr', classes);
+GenerateAst.defineAst(outputDir, 'Expr', exprClasses, 'import Token from "./Token"');
+const stmtClasses = [
+    {
+        className: "Expression",
+        fields: ['expression: Expr']
+    },
+    {
+        className: "Print",
+        fields: ['expression: Expr']
+    },
+];
+GenerateAst.defineAst(outputDir, 'Stmt', stmtClasses, 'import { Expr } from "./Expr"');

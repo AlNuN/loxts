@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const Expr_1 = require("./Expr");
 const Lox_1 = __importDefault(require("./Lox"));
+const Stmt_1 = require("./Stmt");
 const TokenType_1 = require("./TokenType");
 class ParseError extends Error {
 }
@@ -14,15 +15,29 @@ class Parser {
         this.tokens = tokens;
     }
     parse() {
-        try {
-            return this.expression();
+        let statements = [];
+        while (!this.isAtEnd()) {
+            statements.push(this.statement());
         }
-        catch (error) {
-            return null;
-        }
+        return statements;
     }
     expression() {
         return this.equality();
+    }
+    statement() {
+        if (this.match(TokenType_1.TokenType.PRINT))
+            return this.printStatement();
+        return this.expressionStatement();
+    }
+    printStatement() {
+        let value = this.expression();
+        this.consume(TokenType_1.TokenType.SEMICOLON, 'Expect ";" after value.');
+        return new Stmt_1.Print(value);
+    }
+    expressionStatement() {
+        let expr = this.expression();
+        this.consume(TokenType_1.TokenType.SEMICOLON, 'Expect ";" after value.');
+        return new Stmt_1.Expression(expr);
     }
     equality() {
         let expr = this.comparison();

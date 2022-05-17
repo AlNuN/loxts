@@ -57,10 +57,10 @@ class Lox {
         const scanner = new Scanner_1.default(source);
         const tokens = scanner.scanTokens();
         const parser = new Parser_1.default(tokens);
-        const expression = parser.parse();
-        if (Lox.hadError || expression === null)
+        const statements = parser.parse();
+        if (Lox.hadError)
             return;
-        Lox.interpreter.interpret(expression);
+        Lox.interpreter.interpret(statements);
     }
     static error(line, message) {
         Lox.report(line, "", message);

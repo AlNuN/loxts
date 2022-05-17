@@ -1,5 +1,6 @@
 import { Binary, Expr, Grouping, Literal, Unary } from "./Expr";
 import Lox from "./Lox";
+import { Expression, Print, Stmt } from "./Stmt";
 import Token from "./Token";
 import { TokenType } from "./TokenType";
 
@@ -9,12 +10,14 @@ export default class Parser {
   private tokens: Array<Token>
   private current: number = 0;
 
-  public parse(): Expr|null {
-    try {
-      return this.expression()
-    } catch (error) {
-      return null
+  public parse(): Array<Stmt> {
+    let statements: Array<Stmt> = []
+
+    while (!this.isAtEnd()) {
+      statements.push(this.statement())
     }
+
+    return statements
   }
 
   constructor(tokens: Array<Token>) {
@@ -23,6 +26,24 @@ export default class Parser {
 
   private expression(): Expr {
     return this.equality();
+  }
+
+  private statement(): Stmt {
+    if (this.match(TokenType.PRINT)) return this.printStatement()
+
+    return this.expressionStatement()
+  }
+
+  private printStatement(): Stmt {
+    let value: Expr = this.expression()
+    this.consume(TokenType.SEMICOLON, 'Expect ";" after value.')
+    return new Print(value)
+  }
+
+  private expressionStatement(): Stmt {
+    let expr: Expr = this.expression()
+    this.consume(TokenType.SEMICOLON, 'Expect ";" after value.')
+    return new Expression(expr)
   }
 
   private equality(): Expr {
