@@ -3,10 +3,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const Environment_1 = __importDefault(require("./Environment"));
 const Lox_1 = __importDefault(require("./Lox"));
 const RuntimeError_1 = __importDefault(require("./RuntimeError"));
 const TokenType_1 = require("./TokenType");
 class Interpreter {
+    constructor() {
+        this.environment = new Environment_1.default(null);
+    }
     interpret(statements) {
         try {
             for (let statement of statements) {
@@ -34,6 +38,9 @@ class Interpreter {
                 return -Number(right);
         }
         return null;
+    }
+    visitVariableExpr(expr) {
+        return this.environment.get(expr.name);
     }
     checkNumberOperand(operator, operand) {
         if (typeof operand === 'number')
@@ -76,12 +83,41 @@ class Interpreter {
     execute(stmt) {
         stmt.accept(this);
     }
+    executeBlock(statements, environment) {
+        let previous = this.environment;
+        try {
+            this.environment = environment;
+            for (let statement of statements) {
+                this.execute(statement);
+            }
+        }
+        catch { }
+        finally {
+            this.environment = previous;
+        }
+    }
+    visitBlockStmt(stmt) {
+        this.executeBlock(stmt.statements, new Environment_1.default(this.environment));
+        return;
+    }
     visitExpressionStmt(stmt) {
         this.evaluate(stmt.expression);
     }
     visitPrintStmt(stmt) {
         const value = this.evaluate(stmt.expression);
         console.log(this.stringify(value));
+    }
+    visitVarStmt(stmt) {
+        let value = null;
+        if (stmt.initializer != null) {
+            value = this.evaluate(stmt.initializer);
+        }
+        this.environment.define(stmt.name.lexeme, value);
+    }
+    visitAssignExpr(expr) {
+        const value = this.evaluate(expr.value);
+        this.environment.assign(expr.name, value);
+        return value;
     }
     visitBinaryExpr(expr) {
         let left = this.evaluate(expr.left);

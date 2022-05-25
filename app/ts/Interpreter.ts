@@ -1,7 +1,8 @@
-import { Binary, Expr, Grouping, Literal, Unary, Visitor as ExprVisitor } from "./Expr";
+import Environment from "./Environment";
+import { Assign, Binary, Expr, Grouping, Literal, Unary, Variable, Visitor as ExprVisitor } from "./Expr";
 import Lox from "./Lox";
 import RuntimeError from "./RuntimeError";
-import { Expression, Print, Stmt, Visitor as StmtVisitor } from "./Stmt";
+import { Block, Expression, Print, Stmt, Var, Visitor as StmtVisitor } from "./Stmt";
 import Token from "./Token";
 import { TokenType } from "./TokenType";
 
@@ -9,6 +10,8 @@ export default class Interpreter implements
   ExprVisitor<any>,
   StmtVisitor<void>
 {
+  private environment: Environment = new Environment(null)
+
   public interpret(statements: Array<Stmt>):void {
     try {
       for (let statement of statements) {
@@ -39,6 +42,10 @@ export default class Interpreter implements
     }
 
     return null
+  }
+
+  public visitVariableExpr(expr: Variable): any {
+    return this.environment.get(expr.name)
   }
 
   private checkNumberOperand(operator: Token, operand: any): void {
@@ -86,6 +93,25 @@ export default class Interpreter implements
     stmt.accept(this)
   }
 
+  private executeBlock(statements: Array<Stmt>, environment: Environment): void {
+    let previous = this.environment
+    try {
+      this.environment = environment
+
+      for (let statement of statements) {
+        this.execute(statement)
+      }
+    } catch { }
+    finally {
+      this.environment = previous
+    }
+  }
+
+  visitBlockStmt(stmt: Block): void {
+    this.executeBlock(stmt.statements, new Environment(this.environment)) 
+    return
+  }
+
   public visitExpressionStmt(stmt: Expression): void {
     this.evaluate(stmt.expression)
   }
@@ -93,6 +119,22 @@ export default class Interpreter implements
   public visitPrintStmt(stmt: Print): void {
     const value: any = this.evaluate(stmt.expression)
     console.log(this.stringify(value))
+  }
+
+  public visitVarStmt(stmt: Var): void {
+    let value: any = null;
+
+    if (stmt.initializer != null) {
+      value = this.evaluate(stmt.initializer)
+    }
+
+    this.environment.define(stmt.name.lexeme, value)
+  }
+
+  visitAssignExpr(expr: Assign): any {
+    const value: any = this.evaluate(expr.value)
+    this.environment.assign(expr.name, value)
+    return value
   }
 
   public visitBinaryExpr(expr: Binary): any {

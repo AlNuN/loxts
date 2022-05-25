@@ -56,6 +56,10 @@ if (process.argv.length != 3) {
 let outputDir = process.argv[2];
 const exprClasses = [
     {
+        className: "Assign",
+        fields: ['name: Token', 'value: Expr'],
+    },
+    {
         className: "Binary",
         fields: ['left: Expr', 'operator: Token', 'right: Expr'],
     },
@@ -71,9 +75,17 @@ const exprClasses = [
         className: "Unary",
         fields: ['operator: Token', 'right: Expr']
     },
+    {
+        className: "Variable",
+        fields: ['name: Token']
+    },
 ];
 GenerateAst.defineAst(outputDir, 'Expr', exprClasses, 'import Token from "./Token"');
 const stmtClasses = [
+    {
+        className: "Block",
+        fields: ['statements: Array<Stmt>']
+    },
     {
         className: "Expression",
         fields: ['expression: Expr']
@@ -82,5 +94,9 @@ const stmtClasses = [
         className: "Print",
         fields: ['expression: Expr']
     },
+    {
+        className: "Var",
+        fields: ['name: Token', 'initializer: Expr|null']
+    },
 ];
-GenerateAst.defineAst(outputDir, 'Stmt', stmtClasses, 'import { Expr } from "./Expr"');
+GenerateAst.defineAst(outputDir, 'Stmt', stmtClasses, 'import { Expr } from "./Expr"; import Token from "./Token"');

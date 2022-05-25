@@ -68,6 +68,10 @@ let outputDir = process.argv[2];
 
 const exprClasses: Array<GeneratedClass> = [
   {
+    className: "Assign",
+    fields: ['name: Token', 'value: Expr'],
+  },
+  {
     className: "Binary",
     fields: ['left: Expr', 'operator: Token', 'right: Expr'],
   },
@@ -83,11 +87,19 @@ const exprClasses: Array<GeneratedClass> = [
     className: "Unary",
     fields: ['operator: Token', 'right: Expr']
   },
+  {
+    className: "Variable",
+    fields: ['name: Token']
+  },
 ]
 
 GenerateAst.defineAst(outputDir, 'Expr', exprClasses, 'import Token from "./Token"')
 
 const stmtClasses: Array<GeneratedClass> = [
+  {
+    className: "Block",
+    fields: ['statements: Array<Stmt>']
+  },
   {
     className: "Expression",
     fields: ['expression: Expr']
@@ -96,6 +108,10 @@ const stmtClasses: Array<GeneratedClass> = [
     className: "Print",
     fields: ['expression: Expr']
   },
+  {
+    className: "Var",
+    fields: ['name: Token', 'initializer: Expr|null']
+  },
 ]
 
-GenerateAst.defineAst(outputDir, 'Stmt', stmtClasses, 'import { Expr } from "./Expr"')
+GenerateAst.defineAst(outputDir, 'Stmt', stmtClasses, 'import { Expr } from "./Expr"; import Token from "./Token"')

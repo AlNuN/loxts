@@ -1,9 +1,20 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Unary = exports.Literal = exports.Grouping = exports.Binary = exports.Expr = void 0;
+exports.Variable = exports.Unary = exports.Literal = exports.Grouping = exports.Binary = exports.Assign = exports.Expr = void 0;
 class Expr {
 }
 exports.Expr = Expr;
+class Assign extends Expr {
+    constructor(name, value) {
+        super();
+        this.name = name;
+        this.value = value;
+    }
+    accept(visitor) {
+        return visitor.visitAssignExpr(this);
+    }
+}
+exports.Assign = Assign;
 class Binary extends Expr {
     constructor(left, operator, right) {
         super();
@@ -47,3 +58,13 @@ class Unary extends Expr {
     }
 }
 exports.Unary = Unary;
+class Variable extends Expr {
+    constructor(name) {
+        super();
+        this.name = name;
+    }
+    accept(visitor) {
+        return visitor.visitVariableExpr(this);
+    }
+}
+exports.Variable = Variable;
