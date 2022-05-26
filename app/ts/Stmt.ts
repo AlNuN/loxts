@@ -7,9 +7,13 @@
       
         visitExpressionStmt(stmt: Expression): R
       
+        visitIfStmt(stmt: If): R
+      
         visitPrintStmt(stmt: Print): R
       
         visitVarStmt(stmt: Var): R
+      
+        visitWhileStmt(stmt: While): R
       }
 
       export abstract class Stmt {
@@ -39,6 +43,17 @@
       }
     }
     
+    export class If extends Stmt {
+      public condition: Expr; public thenBranch: Stmt; public elseBranch: Stmt|null
+      constructor(condition: Expr,thenBranch: Stmt,elseBranch: Stmt|null) { 
+        super() 
+        this.condition = condition; this.thenBranch = thenBranch; this.elseBranch = elseBranch
+      }
+      accept<R>(visitor: Visitor<R>): R {
+        return visitor.visitIfStmt(this)
+      }
+    }
+    
     export class Print extends Stmt {
       public expression: Expr
       constructor(expression: Expr) { 
@@ -58,6 +73,17 @@
       }
       accept<R>(visitor: Visitor<R>): R {
         return visitor.visitVarStmt(this)
+      }
+    }
+    
+    export class While extends Stmt {
+      public condition: Expr; public body: Stmt
+      constructor(condition: Expr,body: Stmt) { 
+        super() 
+        this.condition = condition; this.body = body
+      }
+      accept<R>(visitor: Visitor<R>): R {
+        return visitor.visitWhileStmt(this)
       }
     }
     

@@ -72,6 +72,10 @@ const exprClasses = [
         fields: ['value: Object|null']
     },
     {
+        className: "Logical",
+        fields: ['left: Expr', 'operator: Token', 'right: Expr']
+    },
+    {
         className: "Unary",
         fields: ['operator: Token', 'right: Expr']
     },
@@ -91,12 +95,20 @@ const stmtClasses = [
         fields: ['expression: Expr']
     },
     {
+        className: "If",
+        fields: ['condition: Expr', 'thenBranch: Stmt', 'elseBranch: Stmt|null']
+    },
+    {
         className: "Print",
         fields: ['expression: Expr']
     },
     {
         className: "Var",
         fields: ['name: Token', 'initializer: Expr|null']
+    },
+    {
+        className: "While",
+        fields: ['condition: Expr', 'body: Stmt']
     },
 ];
 GenerateAst.defineAst(outputDir, 'Stmt', stmtClasses, 'import { Expr } from "./Expr"; import Token from "./Token"');

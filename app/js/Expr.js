@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Variable = exports.Unary = exports.Literal = exports.Grouping = exports.Binary = exports.Assign = exports.Expr = void 0;
+exports.Variable = exports.Unary = exports.Logical = exports.Literal = exports.Grouping = exports.Binary = exports.Assign = exports.Expr = void 0;
 class Expr {
 }
 exports.Expr = Expr;
@@ -47,6 +47,18 @@ class Literal extends Expr {
     }
 }
 exports.Literal = Literal;
+class Logical extends Expr {
+    constructor(left, operator, right) {
+        super();
+        this.left = left;
+        this.operator = operator;
+        this.right = right;
+    }
+    accept(visitor) {
+        return visitor.visitLogicalExpr(this);
+    }
+}
+exports.Logical = Logical;
 class Unary extends Expr {
     constructor(operator, right) {
         super();

@@ -11,6 +11,8 @@
       
         visitLiteralExpr(expr: Literal): R
       
+        visitLogicalExpr(expr: Logical): R
+      
         visitUnaryExpr(expr: Unary): R
       
         visitVariableExpr(expr: Variable): R
@@ -62,6 +64,17 @@
       }
       accept<R>(visitor: Visitor<R>): R {
         return visitor.visitLiteralExpr(this)
+      }
+    }
+    
+    export class Logical extends Expr {
+      public left: Expr; public operator: Token; public right: Expr
+      constructor(left: Expr,operator: Token,right: Expr) { 
+        super() 
+        this.left = left; this.operator = operator; this.right = right
+      }
+      accept<R>(visitor: Visitor<R>): R {
+        return visitor.visitLogicalExpr(this)
       }
     }
     
