@@ -7,9 +7,13 @@
       
         visitExpressionStmt(stmt: Expression): R
       
+        visitFuncStmt(stmt: Func): R
+      
         visitIfStmt(stmt: If): R
       
         visitPrintStmt(stmt: Print): R
+      
+        visitReturnStmt(stmt: Return): R
       
         visitVarStmt(stmt: Var): R
       
@@ -43,6 +47,17 @@
       }
     }
     
+    export class Func extends Stmt {
+      public name: Token; public params: Array<Token>; public body: Array<Stmt>
+      constructor(name: Token,params: Array<Token>,body: Array<Stmt>) { 
+        super() 
+        this.name = name; this.params = params; this.body = body
+      }
+      accept<R>(visitor: Visitor<R>): R {
+        return visitor.visitFuncStmt(this)
+      }
+    }
+    
     export class If extends Stmt {
       public condition: Expr; public thenBranch: Stmt; public elseBranch: Stmt|null
       constructor(condition: Expr,thenBranch: Stmt,elseBranch: Stmt|null) { 
@@ -62,6 +77,17 @@
       }
       accept<R>(visitor: Visitor<R>): R {
         return visitor.visitPrintStmt(this)
+      }
+    }
+    
+    export class Return extends Stmt {
+      public keyword: Token; public value: Expr|null
+      constructor(keyword: Token,value: Expr|null) { 
+        super() 
+        this.keyword = keyword; this.value = value
+      }
+      accept<R>(visitor: Visitor<R>): R {
+        return visitor.visitReturnStmt(this)
       }
     }
     

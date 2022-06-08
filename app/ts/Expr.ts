@@ -7,6 +7,8 @@
       
         visitBinaryExpr(expr: Binary): R
       
+        visitCallExpr(expr: Call): R
+      
         visitGroupingExpr(expr: Grouping): R
       
         visitLiteralExpr(expr: Literal): R
@@ -42,6 +44,17 @@
       }
       accept<R>(visitor: Visitor<R>): R {
         return visitor.visitBinaryExpr(this)
+      }
+    }
+    
+    export class Call extends Expr {
+      public callee: Expr; public paren: Token; public args: Array<Expr>
+      constructor(callee: Expr,paren: Token,args: Array<Expr>) { 
+        super() 
+        this.callee = callee; this.paren = paren; this.args = args
+      }
+      accept<R>(visitor: Visitor<R>): R {
+        return visitor.visitCallExpr(this)
       }
     }
     

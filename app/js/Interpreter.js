@@ -5,11 +5,23 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const Environment_1 = __importDefault(require("./Environment"));
 const Lox_1 = __importDefault(require("./Lox"));
+const LoxFunction_1 = __importDefault(require("./LoxFunction"));
+const ReturnError_1 = __importDefault(require("./ReturnError"));
 const RuntimeError_1 = __importDefault(require("./RuntimeError"));
 const TokenType_1 = require("./TokenType");
 class Interpreter {
     constructor() {
-        this.environment = new Environment_1.default(null);
+        this.globals = new Environment_1.default(null);
+        this.environment = this.globals;
+        this.globals.define('clock', {
+            arity: () => { return 0; },
+            call: (interpreter, args) => {
+                return Date.now() / 1000;
+            },
+            toString: () => {
+                '<native fn>';
+            }
+        });
     }
     interpret(statements) {
         try {
@@ -103,7 +115,6 @@ class Interpreter {
                 this.execute(statement);
             }
         }
-        catch { }
         finally {
             this.environment = previous;
         }
@@ -114,6 +125,10 @@ class Interpreter {
     }
     visitExpressionStmt(stmt) {
         this.evaluate(stmt.expression);
+    }
+    visitFuncStmt(stmt) {
+        let func = new LoxFunction_1.default(stmt);
+        this.environment.define(stmt.name.lexeme, func);
     }
     visitIfStmt(stmt) {
         if (this.isTruthy(this.evaluate(stmt.condition))) {
@@ -126,6 +141,12 @@ class Interpreter {
     visitPrintStmt(stmt) {
         const value = this.evaluate(stmt.expression);
         console.log(this.stringify(value));
+    }
+    visitReturnStmt(stmt) {
+        let value = null;
+        if (stmt.value != null)
+            value = this.evaluate(stmt.value);
+        throw new ReturnError_1.default(value);
     }
     visitVarStmt(stmt) {
         let value = null;
@@ -181,6 +202,23 @@ class Interpreter {
                 return this.isEqual(left, right);
         }
         return null;
+    }
+    visitCallExpr(expr) {
+        let callee = this.evaluate(expr.callee);
+        let args = [];
+        for (let arg of expr.args) {
+            args.push(this.evaluate(arg));
+        }
+        if (!(callee.call)
+            || !(callee.arity)
+            || !(callee.toString)) {
+            throw new RuntimeError_1.default(expr.paren, 'Can only call functions and classes.');
+        }
+        let func = callee;
+        if (args.length != func.arity()) {
+            throw new RuntimeError_1.default(expr.paren, `Expected ${func.arity()} arguments but got ${args.length}.`);
+        }
+        return func.call(this, args);
     }
 }
 exports.default = Interpreter;

@@ -1,8 +1,11 @@
 import Environment from "./Environment";
-import { Assign, Binary, Expr, Grouping, Literal, Logical, Unary, Variable, Visitor as ExprVisitor } from "./Expr";
+import { Assign, Binary, Call, Expr, Grouping, Literal, Logical, Unary, Variable, Visitor as ExprVisitor } from "./Expr";
 import Lox from "./Lox";
+import LoxCallable from "./LoxCallable";
+import LoxFunction from "./LoxFunction";
+import ReturnError from "./ReturnError";
 import RuntimeError from "./RuntimeError";
-import { Block, Expression, If, Print, Stmt, Var, Visitor as StmtVisitor, While } from "./Stmt";
+import { Block, Expression, Func, If, Print, Return, Stmt, Var, Visitor as StmtVisitor, While } from "./Stmt";
 import Token from "./Token";
 import { TokenType } from "./TokenType";
 
@@ -10,7 +13,18 @@ export default class Interpreter implements
   ExprVisitor<any>,
   StmtVisitor<void>
 {
-  private environment: Environment = new Environment(null)
+  public globals: Environment = new Environment(null)
+  private environment: Environment = this.globals
+
+  constructor() {
+    this.globals.define('clock', <LoxCallable> {
+      arity: () => { return 0 },
+      call: (interpreter: Interpreter, args: Array<any>) => {
+        return Date.now() / 1000
+      },
+      toString: () => { '<native fn>' }
+    })
+  }
 
   public interpret(statements: Array<Stmt>):void {
     try {
@@ -105,7 +119,7 @@ export default class Interpreter implements
     stmt.accept(this)
   }
 
-  private executeBlock(statements: Array<Stmt>, environment: Environment): void {
+  public executeBlock(statements: Array<Stmt>, environment: Environment): void {
     let previous = this.environment
     try {
       this.environment = environment
@@ -113,7 +127,7 @@ export default class Interpreter implements
       for (let statement of statements) {
         this.execute(statement)
       }
-    } catch { }
+    }
     finally {
       this.environment = previous
     }
@@ -128,6 +142,11 @@ export default class Interpreter implements
     this.evaluate(stmt.expression)
   }
 
+  visitFuncStmt(stmt: Func): void {
+    let func: LoxFunction = new LoxFunction(stmt)
+    this.environment.define(stmt.name.lexeme, func)
+  }
+
   visitIfStmt(stmt: If): void {
     if (this.isTruthy(this.evaluate(stmt.condition))) {
       this.execute(stmt.thenBranch)
@@ -139,6 +158,13 @@ export default class Interpreter implements
   public visitPrintStmt(stmt: Print): void {
     const value: any = this.evaluate(stmt.expression)
     console.log(this.stringify(value))
+  }
+
+  visitReturnStmt(stmt: Return): void {
+    let value: any = null
+    if (stmt.value != null) value = this.evaluate(stmt.value)
+
+    throw new ReturnError(value)
   }
 
   public visitVarStmt(stmt: Var): void {
@@ -204,6 +230,32 @@ export default class Interpreter implements
     }
 
     return null
+  }
+
+  visitCallExpr(expr: Call): any {
+    let callee: any = this.evaluate(expr.callee)
+
+    let args: Array<any> = []
+    for(let arg of expr.args) {
+      args.push(this.evaluate(arg))
+    }
+
+    if (
+      !((callee as LoxCallable).call)
+      || !((callee as LoxCallable).arity)
+      || !((callee as LoxCallable).toString)
+    ) {
+      throw new RuntimeError(expr.paren,
+        'Can only call functions and classes.')
+    }
+
+    let func: LoxCallable = callee;
+    if (args.length != func.arity()) {
+      throw new RuntimeError(expr.paren,
+        `Expected ${func.arity()} arguments but got ${args.length}.`)
+    }
+
+    return func.call(this, args)
   }
 
 }

@@ -64,6 +64,10 @@ const exprClasses = [
         fields: ['left: Expr', 'operator: Token', 'right: Expr'],
     },
     {
+        className: "Call",
+        fields: ['callee: Expr', 'paren: Token', 'args: Array<Expr>'],
+    },
+    {
         className: "Grouping",
         fields: ['expression: Expr']
     },
@@ -95,12 +99,20 @@ const stmtClasses = [
         fields: ['expression: Expr']
     },
     {
+        className: "Func",
+        fields: ['name: Token', 'params: Array<Token>', 'body: Array<Stmt>']
+    },
+    {
         className: "If",
         fields: ['condition: Expr', 'thenBranch: Stmt', 'elseBranch: Stmt|null']
     },
     {
         className: "Print",
         fields: ['expression: Expr']
+    },
+    {
+        className: "Return",
+        fields: ['keyword: Token', 'value: Expr|null']
     },
     {
         className: "Var",
