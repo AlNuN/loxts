@@ -143,7 +143,7 @@ export default class Interpreter implements
   }
 
   visitFuncStmt(stmt: Func): void {
-    let func: LoxFunction = new LoxFunction(stmt)
+    let func: LoxFunction = new LoxFunction(stmt, this.environment)
     this.environment.define(stmt.name.lexeme, func)
   }
 

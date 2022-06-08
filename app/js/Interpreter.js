@@ -127,7 +127,7 @@ class Interpreter {
         this.evaluate(stmt.expression);
     }
     visitFuncStmt(stmt) {
-        let func = new LoxFunction_1.default(stmt);
+        let func = new LoxFunction_1.default(stmt, this.environment);
         this.environment.define(stmt.name.lexeme, func);
     }
     visitIfStmt(stmt) {

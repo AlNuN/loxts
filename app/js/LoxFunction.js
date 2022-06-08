@@ -6,11 +6,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Environment_1 = __importDefault(require("./Environment"));
 const ReturnError_1 = __importDefault(require("./ReturnError"));
 class LoxFunction {
-    constructor(declaration) {
+    constructor(declaration, closure) {
         this.declaration = declaration;
+        this.closure = closure;
     }
     call(interpreter, args) {
-        let environment = new Environment_1.default(interpreter.globals);
+        let environment = new Environment_1.default(this.closure);
         for (let i = 0; i < this.declaration.params.length; ++i) {
             environment.define(this.declaration.params[i].lexeme, args[i]);
         }

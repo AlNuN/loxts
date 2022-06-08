@@ -6,13 +6,15 @@ import { Func } from "./Stmt";
 
 export default class LoxFunction implements LoxCallable {
   private declaration : Func
+  private closure: Environment
 
-  constructor(declaration: Func) {
+  constructor(declaration: Func, closure: Environment) {
     this.declaration = declaration
+    this.closure = closure
   }
 
   call(interpreter: Interpreter, args: any[]) {
-    let environment: Environment = new Environment(interpreter.globals)
+    let environment: Environment = new Environment(this.closure)
     for(let i = 0; i < this.declaration.params.length; ++i) {
       environment.define(this.declaration.params[i].lexeme, args[i])
     }
