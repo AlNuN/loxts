@@ -10,6 +10,7 @@ const Scanner_1 = __importDefault(require("./Scanner"));
 const TokenType_1 = require("./TokenType");
 const Parser_1 = __importDefault(require("./Parser"));
 const Interpreter_1 = __importDefault(require("./Interpreter"));
+const Resolver_1 = require("./Resolver");
 class Lox {
     constructor(args) {
         this.args = args;
@@ -58,6 +59,10 @@ class Lox {
         const tokens = scanner.scanTokens();
         const parser = new Parser_1.default(tokens);
         const statements = parser.parse();
+        if (Lox.hadError)
+            return;
+        let resolver = new Resolver_1.Resolver(Lox.interpreter);
+        resolver.resolve(statements);
         if (Lox.hadError)
             return;
         Lox.interpreter.interpret(statements);

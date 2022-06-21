@@ -8,6 +8,7 @@ import Parser from './Parser'
 import RuntimeError from './RuntimeError'
 import Interpreter from './Interpreter'
 import { Stmt } from './Stmt'
+import { Resolver } from './Resolver'
 
 export default class Lox {
   private args : Array<string>
@@ -66,6 +67,11 @@ export default class Lox {
 
     const parser: Parser = new Parser(tokens)
     const statements: Array<Stmt> = parser.parse()
+
+    if (Lox.hadError) return
+
+    let resolver: Resolver = new Resolver(Lox.interpreter)
+    resolver.resolve(statements)
 
     if (Lox.hadError) return
 

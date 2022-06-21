@@ -15,6 +15,7 @@ export default class Interpreter implements
 {
   public globals: Environment = new Environment(null)
   private environment: Environment = this.globals
+  private locals: Map<Expr, number> = new Map()
 
   constructor() {
     this.globals.define('clock', <LoxCallable> {
@@ -71,7 +72,16 @@ export default class Interpreter implements
   }
 
   public visitVariableExpr(expr: Variable): any {
-    return this.environment.get(expr.name)
+    return this.lookUpVariable(expr.name, expr)
+  }
+
+  private lookUpVariable(name: Token, expr: Expr): any {
+    let distance: number|undefined = this.locals.get(expr)
+    if (distance != null) {
+      return this.environment.getAt(distance, name.lexeme)
+    } else {
+      return this.globals.get(name)
+    }
   }
 
   private checkNumberOperand(operator: Token, operand: any): void {
@@ -117,6 +127,10 @@ export default class Interpreter implements
 
   private execute(stmt: Stmt): void {
     stmt.accept(this)
+  }
+
+  public resolve(expr: Expr, depth: number): void {
+    this.locals.set(expr, depth)
   }
 
   public executeBlock(statements: Array<Stmt>, environment: Environment): void {
@@ -185,7 +199,14 @@ export default class Interpreter implements
 
   visitAssignExpr(expr: Assign): any {
     const value: any = this.evaluate(expr.value)
-    this.environment.assign(expr.name, value)
+
+    let distance: number|undefined = this.locals.get(expr)
+    if (distance != null) {
+      this.environment.assignAt(distance, expr.name, value)
+    } else {
+      this.globals.assign(expr.name, value)
+    }
+
     return value
   }
 

@@ -13,6 +13,7 @@ class Interpreter {
     constructor() {
         this.globals = new Environment_1.default(null);
         this.environment = this.globals;
+        this.locals = new Map();
         this.globals.define('clock', {
             arity: () => { return 0; },
             call: (interpreter, args) => {
@@ -64,7 +65,16 @@ class Interpreter {
         return null;
     }
     visitVariableExpr(expr) {
-        return this.environment.get(expr.name);
+        return this.lookUpVariable(expr.name, expr);
+    }
+    lookUpVariable(name, expr) {
+        let distance = this.locals.get(expr);
+        if (distance != null) {
+            return this.environment.getAt(distance, name.lexeme);
+        }
+        else {
+            return this.globals.get(name);
+        }
     }
     checkNumberOperand(operator, operand) {
         if (typeof operand === 'number')
@@ -106,6 +116,9 @@ class Interpreter {
     }
     execute(stmt) {
         stmt.accept(this);
+    }
+    resolve(expr, depth) {
+        this.locals.set(expr, depth);
     }
     executeBlock(statements, environment) {
         let previous = this.environment;
@@ -162,7 +175,13 @@ class Interpreter {
     }
     visitAssignExpr(expr) {
         const value = this.evaluate(expr.value);
-        this.environment.assign(expr.name, value);
+        let distance = this.locals.get(expr);
+        if (distance != null) {
+            this.environment.assignAt(distance, expr.name, value);
+        }
+        else {
+            this.globals.assign(expr.name, value);
+        }
         return value;
     }
     visitBinaryExpr(expr) {
