@@ -10,11 +10,19 @@ var FunctionType;
 (function (FunctionType) {
     FunctionType[FunctionType["NONE"] = 0] = "NONE";
     FunctionType[FunctionType["FUNC"] = 1] = "FUNC";
+    FunctionType[FunctionType["INITIALIZER"] = 2] = "INITIALIZER";
+    FunctionType[FunctionType["METHOD"] = 3] = "METHOD";
 })(FunctionType || (FunctionType = {}));
+var ClassType;
+(function (ClassType) {
+    ClassType[ClassType["NONE"] = 0] = "NONE";
+    ClassType[ClassType["CLASS"] = 1] = "CLASS";
+})(ClassType || (ClassType = {}));
 class Resolver {
     constructor(interpreter) {
         this.scopes = new Stack_1.Stack();
         this.currentFunction = FunctionType.NONE;
+        this.currentClass = ClassType.NONE;
         this.interpreter = interpreter;
     }
     resolve(statements) {
@@ -73,6 +81,23 @@ class Resolver {
         this.resolve(stmt.statements);
         this.endScope();
     }
+    visitClassStmt(stmt) {
+        let enclosingClass = this.currentClass;
+        this.currentClass = ClassType.CLASS;
+        this.declare(stmt.name);
+        this.define(stmt.name);
+        this.beginScope();
+        this.scopes.peek()?.set('this', true);
+        for (let method of stmt.methods) {
+            let declaration = FunctionType.METHOD;
+            if (method.name.lexeme == 'init') {
+                declaration = FunctionType.INITIALIZER;
+            }
+            this.resolveFunction(method, declaration);
+        }
+        this.endScope();
+        this.currentClass = enclosingClass;
+    }
     visitExpressionStmt(stmt) {
         this.resolveExpr(stmt.expression);
     }
@@ -95,6 +120,9 @@ class Resolver {
             Lox_1.default.errorT(stmt.keyword, "Can't return from top-level.");
         }
         if (stmt.value != null) {
+            if (this.currentFunction == FunctionType.INITIALIZER) {
+                Lox_1.default.errorT(stmt.keyword, "Can't return a value from an initializer.");
+            }
             this.resolveExpr(stmt.value);
         }
     }
@@ -123,6 +151,9 @@ class Resolver {
             this.resolveExpr(argument);
         }
     }
+    visitGetExpr(expr) {
+        this.resolveExpr(expr.object);
+    }
     visitGroupingExpr(expr) {
         this.resolveExpr(expr.expression);
     }
@@ -132,6 +163,16 @@ class Resolver {
     visitLogicalExpr(expr) {
         this.resolveExpr(expr.left);
         this.resolveExpr(expr.right);
+    }
+    visitSettExpr(expr) {
+        this.resolveExpr(expr.value);
+        this.resolveExpr(expr.object);
+    }
+    visitThisExpr(expr) {
+        if (this.currentClass == ClassType.NONE) {
+            Lox_1.default.errorT(expr.keyword, `Can't use "this" outside of a class.`);
+        }
+        this.resolveLocal(expr, expr.keyword);
     }
     visitUnaryExpr(expr) {
         this.resolveExpr(expr.right);

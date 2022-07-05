@@ -5,6 +5,8 @@
       export interface Visitor<R> {
         visitBlockStmt(stmt: Block): R
       
+        visitClassStmt(stmt: Class): R
+      
         visitExpressionStmt(stmt: Expression): R
       
         visitFuncStmt(stmt: Func): R
@@ -33,6 +35,17 @@
       }
       accept<R>(visitor: Visitor<R>): R {
         return visitor.visitBlockStmt(this)
+      }
+    }
+    
+    export class Class extends Stmt {
+      public name: Token; public methods: Array<Func>
+      constructor(name: Token,methods: Array<Func>) { 
+        super() 
+        this.name = name; this.methods = methods
+      }
+      accept<R>(visitor: Visitor<R>): R {
+        return visitor.visitClassStmt(this)
       }
     }
     

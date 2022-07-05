@@ -9,11 +9,17 @@
       
         visitCallExpr(expr: Call): R
       
+        visitGetExpr(expr: Get): R
+      
         visitGroupingExpr(expr: Grouping): R
       
         visitLiteralExpr(expr: Literal): R
       
         visitLogicalExpr(expr: Logical): R
+      
+        visitSettExpr(expr: Sett): R
+      
+        visitThisExpr(expr: This): R
       
         visitUnaryExpr(expr: Unary): R
       
@@ -58,6 +64,17 @@
       }
     }
     
+    export class Get extends Expr {
+      public object: Expr; public name: Token
+      constructor(object: Expr,name: Token) { 
+        super() 
+        this.object = object; this.name = name
+      }
+      accept<R>(visitor: Visitor<R>): R {
+        return visitor.visitGetExpr(this)
+      }
+    }
+    
     export class Grouping extends Expr {
       public expression: Expr
       constructor(expression: Expr) { 
@@ -88,6 +105,28 @@
       }
       accept<R>(visitor: Visitor<R>): R {
         return visitor.visitLogicalExpr(this)
+      }
+    }
+    
+    export class Sett extends Expr {
+      public object: Expr; public name: Token; public value: Expr
+      constructor(object: Expr,name: Token,value: Expr) { 
+        super() 
+        this.object = object; this.name = name; this.value = value
+      }
+      accept<R>(visitor: Visitor<R>): R {
+        return visitor.visitSettExpr(this)
+      }
+    }
+    
+    export class This extends Expr {
+      public keyword: Token
+      constructor(keyword: Token) { 
+        super() 
+        this.keyword = keyword
+      }
+      accept<R>(visitor: Visitor<R>): R {
+        return visitor.visitThisExpr(this)
       }
     }
     

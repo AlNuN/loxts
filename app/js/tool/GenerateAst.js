@@ -68,6 +68,10 @@ const exprClasses = [
         fields: ['callee: Expr', 'paren: Token', 'args: Array<Expr>'],
     },
     {
+        className: "Get",
+        fields: ['object: Expr', 'name: Token'],
+    },
+    {
         className: "Grouping",
         fields: ['expression: Expr']
     },
@@ -78,6 +82,14 @@ const exprClasses = [
     {
         className: "Logical",
         fields: ['left: Expr', 'operator: Token', 'right: Expr']
+    },
+    {
+        className: "Sett",
+        fields: ['object: Expr', 'name: Token', 'value: Expr']
+    },
+    {
+        className: "This",
+        fields: ['keyword: Token']
     },
     {
         className: "Unary",
@@ -93,6 +105,10 @@ const stmtClasses = [
     {
         className: "Block",
         fields: ['statements: Array<Stmt>']
+    },
+    {
+        className: "Class",
+        fields: ['name: Token', 'methods: Array<Func>']
     },
     {
         className: "Expression",

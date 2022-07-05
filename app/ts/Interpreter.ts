@@ -1,11 +1,13 @@
 import Environment from "./Environment";
-import { Assign, Binary, Call, Expr, Grouping, Literal, Logical, Unary, Variable, Visitor as ExprVisitor } from "./Expr";
+import { Assign, Binary, Call, Expr, Get, Grouping, Literal, Logical, Sett, This, Unary, Variable, Visitor as ExprVisitor } from "./Expr";
 import Lox from "./Lox";
 import LoxCallable from "./LoxCallable";
+import LoxClass from "./LoxClass";
 import LoxFunction from "./LoxFunction";
+import LoxInstance from "./LoxInstance";
 import ReturnError from "./ReturnError";
 import RuntimeError from "./RuntimeError";
-import { Block, Expression, Func, If, Print, Return, Stmt, Var, Visitor as StmtVisitor, While } from "./Stmt";
+import { Block, Class, Expression, Func, If, Print, Return, Stmt, Var, Visitor as StmtVisitor, While } from "./Stmt";
 import Token from "./Token";
 import { TokenType } from "./TokenType";
 
@@ -55,6 +57,23 @@ export default class Interpreter implements
     }
 
     return this.evaluate(expr.right)
+  }
+
+  visitSettExpr(expr: Sett) {
+    let object: any = this.evaluate(expr.object)
+
+    if (!(object instanceof LoxInstance)) {
+      throw new RuntimeError(expr.name,
+        'Only instances have fields.')
+    }
+
+    let value: any = this.evaluate(expr.value)
+    object.set(expr.name, value)
+    return value
+  }
+
+  visitThisExpr(expr: This) {
+    return this.lookUpVariable(expr.keyword, expr)
   }
 
   public visitUnaryExpr(expr: Unary): any {
@@ -152,12 +171,25 @@ export default class Interpreter implements
     return
   }
 
+  visitClassStmt(stmt: Class): void {
+    this.environment.define(stmt.name.lexeme, null)
+
+    let methods: Map<string, LoxFunction> = new Map()
+    for (let method of stmt.methods) {
+      let func: LoxFunction = new LoxFunction(method, this.environment, method.name.lexeme == 'init')
+      methods.set(method.name.lexeme, func)
+    }
+
+    const klass: LoxClass = new LoxClass(stmt.name.lexeme, methods)
+    this.environment.assign(stmt.name, klass)
+  }
+
   public visitExpressionStmt(stmt: Expression): void {
     this.evaluate(stmt.expression)
   }
 
   visitFuncStmt(stmt: Func): void {
-    let func: LoxFunction = new LoxFunction(stmt, this.environment)
+    let func: LoxFunction = new LoxFunction(stmt, this.environment, false)
     this.environment.define(stmt.name.lexeme, func)
   }
 
@@ -277,6 +309,16 @@ export default class Interpreter implements
     }
 
     return func.call(this, args)
+  }
+
+  visitGetExpr(expr: Get) {
+    let object: any = this.evaluate(expr.object)
+    if (object instanceof LoxInstance) {
+      return object.get(expr.name)
+    }
+
+    throw new RuntimeError(expr.name,
+      'Only instances have properties')
   }
 
 }

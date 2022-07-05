@@ -27,6 +27,8 @@ class Parser {
     }
     declaration() {
         try {
+            if (this.match(TokenType_1.TokenType.CLASS))
+                return this.classDeclaration();
             if (this.match(TokenType_1.TokenType.FUN))
                 return this.func('function');
             if (this.match(TokenType_1.TokenType.VAR))
@@ -40,6 +42,16 @@ class Parser {
             console.error('Parse error on declaration.');
             (0, process_1.exit)();
         }
+    }
+    classDeclaration() {
+        let name = this.consume(TokenType_1.TokenType.IDENTIFIER, 'Expect class name.');
+        this.consume(TokenType_1.TokenType.LEFT_BRACE, 'Expect "{" before class body.');
+        let methods = [];
+        while (!this.check(TokenType_1.TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
+            methods.push(this.func('method'));
+        }
+        this.consume(TokenType_1.TokenType.RIGHT_BRACE, 'Expect "}" after class body.');
+        return new Stmt_1.Class(name, methods);
     }
     statement() {
         if (this.match(TokenType_1.TokenType.FOR))
@@ -170,6 +182,10 @@ class Parser {
                 let name = expr.name;
                 return new Expr_1.Assign(name, value);
             }
+            else if (expr instanceof Expr_1.Get) {
+                let get = expr;
+                return new Expr_1.Sett(get.object, get.name, value);
+            }
             this.error(equals, 'Invalid assignment target.');
         }
         return expr;
@@ -255,6 +271,10 @@ class Parser {
             if (this.match(TokenType_1.TokenType.LEFT_PAREN)) {
                 expr = this.finishCall(expr);
             }
+            else if (this.match(TokenType_1.TokenType.DOT)) {
+                let name = this.consume(TokenType_1.TokenType.IDENTIFIER, 'Expect property name after ".".');
+                expr = new Expr_1.Get(expr, name);
+            }
             else {
                 break;
             }
@@ -271,6 +291,8 @@ class Parser {
         if (this.match(TokenType_1.TokenType.NUMBER, TokenType_1.TokenType.STRING)) {
             return new Expr_1.Literal(this.previous().literal);
         }
+        if (this.match(TokenType_1.TokenType.THIS))
+            return new Expr_1.This(this.previous());
         if (this.match(TokenType_1.TokenType.IDENTIFIER)) {
             return new Expr_1.Variable(this.previous());
         }

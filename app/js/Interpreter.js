@@ -5,7 +5,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const Environment_1 = __importDefault(require("./Environment"));
 const Lox_1 = __importDefault(require("./Lox"));
+const LoxClass_1 = __importDefault(require("./LoxClass"));
 const LoxFunction_1 = __importDefault(require("./LoxFunction"));
+const LoxInstance_1 = __importDefault(require("./LoxInstance"));
 const ReturnError_1 = __importDefault(require("./ReturnError"));
 const RuntimeError_1 = __importDefault(require("./RuntimeError"));
 const TokenType_1 = require("./TokenType");
@@ -52,6 +54,18 @@ class Interpreter {
                 return left;
         }
         return this.evaluate(expr.right);
+    }
+    visitSettExpr(expr) {
+        let object = this.evaluate(expr.object);
+        if (!(object instanceof LoxInstance_1.default)) {
+            throw new RuntimeError_1.default(expr.name, 'Only instances have fields.');
+        }
+        let value = this.evaluate(expr.value);
+        object.set(expr.name, value);
+        return value;
+    }
+    visitThisExpr(expr) {
+        return this.lookUpVariable(expr.keyword, expr);
     }
     visitUnaryExpr(expr) {
         let right = this.evaluate(expr.right);
@@ -136,11 +150,21 @@ class Interpreter {
         this.executeBlock(stmt.statements, new Environment_1.default(this.environment));
         return;
     }
+    visitClassStmt(stmt) {
+        this.environment.define(stmt.name.lexeme, null);
+        let methods = new Map();
+        for (let method of stmt.methods) {
+            let func = new LoxFunction_1.default(method, this.environment, method.name.lexeme == 'init');
+            methods.set(method.name.lexeme, func);
+        }
+        const klass = new LoxClass_1.default(stmt.name.lexeme, methods);
+        this.environment.assign(stmt.name, klass);
+    }
     visitExpressionStmt(stmt) {
         this.evaluate(stmt.expression);
     }
     visitFuncStmt(stmt) {
-        let func = new LoxFunction_1.default(stmt, this.environment);
+        let func = new LoxFunction_1.default(stmt, this.environment, false);
         this.environment.define(stmt.name.lexeme, func);
     }
     visitIfStmt(stmt) {
@@ -238,6 +262,13 @@ class Interpreter {
             throw new RuntimeError_1.default(expr.paren, `Expected ${func.arity()} arguments but got ${args.length}.`);
         }
         return func.call(this, args);
+    }
+    visitGetExpr(expr) {
+        let object = this.evaluate(expr.object);
+        if (object instanceof LoxInstance_1.default) {
+            return object.get(expr.name);
+        }
+        throw new RuntimeError_1.default(expr.name, 'Only instances have properties');
     }
 }
 exports.default = Interpreter;

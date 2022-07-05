@@ -6,9 +6,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Environment_1 = __importDefault(require("./Environment"));
 const ReturnError_1 = __importDefault(require("./ReturnError"));
 class LoxFunction {
-    constructor(declaration, closure) {
+    constructor(declaration, closure, isInitializer) {
         this.declaration = declaration;
         this.closure = closure;
+        this.isInitializer = isInitializer;
+    }
+    bind(instance) {
+        let environment = new Environment_1.default(this.closure);
+        environment.define('this', instance);
+        return new LoxFunction(this.declaration, environment, this.isInitializer);
     }
     call(interpreter, args) {
         let environment = new Environment_1.default(this.closure);
@@ -19,10 +25,14 @@ class LoxFunction {
             interpreter.executeBlock(this.declaration.body, environment);
         }
         catch (returnValue) {
+            if (this.isInitializer)
+                return this.closure.getAt(0, 'this');
             if (returnValue instanceof ReturnError_1.default) {
                 return returnValue.value;
             }
         }
+        if (this.isInitializer)
+            return this.closure.getAt(0, 'this');
         return null;
     }
     arity() {
