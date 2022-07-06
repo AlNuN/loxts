@@ -1,5 +1,5 @@
 import { exit } from "process";
-import { Assign, Binary, Call, Expr, Get, Grouping, Literal, Logical, Sett, This, Unary, Variable } from "./Expr";
+import { Assign, Binary, Call, Expr, Get, Grouping, Literal, Logical, Sett, Super, This, Unary, Variable } from "./Expr";
 import Lox from "./Lox";
 import { Block, Class, Expression, Func, If, Print, Return, Stmt, Var, While } from "./Stmt";
 import Token from "./Token";
@@ -48,6 +48,14 @@ export default class Parser {
   private classDeclaration(): Stmt {
     let name: Token = this.consume(TokenType.IDENTIFIER, 
       'Expect class name.')
+
+    let superclass: Variable|null = null;
+    if (this.match(TokenType.LESS)) {
+      this.consume(TokenType.IDENTIFIER, 
+        'Expect superclass name.')
+      superclass = new Variable(this.previous())
+    }
+
     this.consume(TokenType.LEFT_BRACE, 'Expect "{" before class body.')
 
     let methods: Array<Func> = []
@@ -58,7 +66,7 @@ export default class Parser {
     this.consume(TokenType.RIGHT_BRACE,
       'Expect "}" after class body.')
 
-    return new Class(name, methods)
+    return new Class(name, superclass, methods)
   }
 
   private statement(): Stmt {
@@ -371,6 +379,14 @@ export default class Parser {
 
     if(this.match(TokenType.NUMBER, TokenType.STRING)) {
       return new Literal(this.previous().literal)
+    }
+
+    if (this.match(TokenType.SUPER)) {
+      let keyword: Token = this.previous()
+      this.consume(TokenType.DOT, 'Expect "." after "super".')
+      let method: Token = this.consume(TokenType.IDENTIFIER,
+        'Expect superclass method name.')
+      return new Super(keyword, method)
     }
 
     if (this.match(TokenType.THIS)) return new This(this.previous())

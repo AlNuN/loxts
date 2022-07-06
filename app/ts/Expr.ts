@@ -19,6 +19,8 @@
       
         visitSettExpr(expr: Sett): R
       
+        visitSuperExpr(expr: Super): R
+      
         visitThisExpr(expr: This): R
       
         visitUnaryExpr(expr: Unary): R
@@ -116,6 +118,17 @@
       }
       accept<R>(visitor: Visitor<R>): R {
         return visitor.visitSettExpr(this)
+      }
+    }
+    
+    export class Super extends Expr {
+      public keyword: Token; public method: Token
+      constructor(keyword: Token,method: Token) { 
+        super() 
+        this.keyword = keyword; this.method = method
+      }
+      accept<R>(visitor: Visitor<R>): R {
+        return visitor.visitSuperExpr(this)
       }
     }
     

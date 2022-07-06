@@ -1,6 +1,6 @@
 
       // This is a generated file from GenerateAst.ts
-      import { Expr } from "./Expr"; import Token from "./Token"
+      import { Expr, Variable } from "./Expr"; import Token from "./Token"
 
       export interface Visitor<R> {
         visitBlockStmt(stmt: Block): R
@@ -39,10 +39,10 @@
     }
     
     export class Class extends Stmt {
-      public name: Token; public methods: Array<Func>
-      constructor(name: Token,methods: Array<Func>) { 
+      public name: Token; public superclass: Variable|null; public methods: Array<Func>
+      constructor(name: Token,superclass: Variable|null,methods: Array<Func>) { 
         super() 
-        this.name = name; this.methods = methods
+        this.name = name; this.superclass = superclass; this.methods = methods
       }
       accept<R>(visitor: Visitor<R>): R {
         return visitor.visitClassStmt(this)

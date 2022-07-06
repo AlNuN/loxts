@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Variable = exports.Unary = exports.This = exports.Sett = exports.Logical = exports.Literal = exports.Grouping = exports.Get = exports.Call = exports.Binary = exports.Assign = exports.Expr = void 0;
+exports.Variable = exports.Unary = exports.This = exports.Super = exports.Sett = exports.Logical = exports.Literal = exports.Grouping = exports.Get = exports.Call = exports.Binary = exports.Assign = exports.Expr = void 0;
 class Expr {
 }
 exports.Expr = Expr;
@@ -94,6 +94,17 @@ class Sett extends Expr {
     }
 }
 exports.Sett = Sett;
+class Super extends Expr {
+    constructor(keyword, method) {
+        super();
+        this.keyword = keyword;
+        this.method = method;
+    }
+    accept(visitor) {
+        return visitor.visitSuperExpr(this);
+    }
+}
+exports.Super = Super;
 class This extends Expr {
     constructor(keyword) {
         super();

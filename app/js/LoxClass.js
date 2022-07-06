@@ -5,14 +5,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const LoxInstance_1 = __importDefault(require("./LoxInstance"));
 class LoxClass {
-    constructor(name, methods) {
+    constructor(name, superclass, methods) {
         this.name = name;
+        this.superclass = superclass;
         this.methods = methods;
     }
     findMethod(name) {
         let method = this.methods.get(name);
         if (method)
             return method;
+        if (this.superclass) {
+            return this.superclass.findMethod(name);
+        }
         return null;
     }
     call(interpreter, args) {

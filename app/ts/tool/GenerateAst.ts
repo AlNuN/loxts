@@ -100,6 +100,10 @@ const exprClasses: Array<GeneratedClass> = [
     fields: ['object: Expr', 'name: Token', 'value: Expr']
   },
   {
+    className: "Super",
+    fields: ['keyword: Token', 'method: Token']
+  },
+  {
     className: "This",
     fields: ['keyword: Token']
   },
@@ -122,7 +126,7 @@ const stmtClasses: Array<GeneratedClass> = [
   },
   {
     className: "Class",
-    fields: ['name: Token', 'methods: Array<Func>']
+    fields: ['name: Token', 'superclass: Variable|null', 'methods: Array<Func>']
   },
   {
     className: "Expression",
@@ -154,4 +158,4 @@ const stmtClasses: Array<GeneratedClass> = [
   },
 ]
 
-GenerateAst.defineAst(outputDir, 'Stmt', stmtClasses, 'import { Expr } from "./Expr"; import Token from "./Token"')
+GenerateAst.defineAst(outputDir, 'Stmt', stmtClasses, 'import { Expr, Variable } from "./Expr"; import Token from "./Token"')

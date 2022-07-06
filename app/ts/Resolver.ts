@@ -1,4 +1,4 @@
-import { Assign, Binary, Call, Expr, Get, Grouping, Literal, Logical, Sett, This, Unary, Variable, Visitor as ExprVisitor } from "./Expr";
+import { Assign, Binary, Call, Expr, Get, Grouping, Literal, Logical, Sett, Super, This, Unary, Variable, Visitor as ExprVisitor } from "./Expr";
 import Interpreter from "./Interpreter";
 import Lox from "./Lox";
 import { Stack } from "./Stack";
@@ -14,7 +14,8 @@ enum FunctionType {
 
 enum ClassType {
   NONE,
-  CLASS
+  CLASS,
+  SUBCLASS
 }
 
 export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
@@ -98,6 +99,22 @@ export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
     this.declare(stmt.name)
     this.define(stmt.name)
 
+    if (stmt.superclass &&
+      stmt.name.lexeme == stmt.superclass.name.lexeme) {
+        Lox.errorT(stmt.superclass.name,
+          "A class can't inherit from itself.")
+      }
+
+    if (stmt.superclass) {
+      this.currentClass = ClassType.SUBCLASS
+      this.resolveExpr(stmt.superclass)
+    }
+
+    if (stmt.superclass) {
+      this.beginScope()
+      this.scopes.peek()?.set('super', true)
+    }
+
     this.beginScope()
     this.scopes.peek()?.set('this', true)
 
@@ -110,6 +127,7 @@ export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
     }
 
     this.endScope()
+    if (stmt.superclass) this.endScope()
     this.currentClass = enclosingClass
   }
 
@@ -198,6 +216,17 @@ export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
   visitSettExpr(expr: Sett): void {
     this.resolveExpr(expr.value)
     this.resolveExpr(expr.object)
+  }
+
+  visitSuperExpr(expr: Super): void {
+    if (this.currentClass === ClassType.NONE) {
+      Lox.errorT(expr.keyword,
+        `Can't use "super" outside of a class`)
+    } else if (this.currentClass !== ClassType.SUBCLASS) {
+      Lox.errorT(expr.keyword,
+        `Can't use "super" in a class with no superclass`)
+    }
+    this.resolveLocal(expr, expr.keyword)
   }
 
   visitThisExpr(expr: This): void {

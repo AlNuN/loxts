@@ -5,10 +5,12 @@ import LoxInstance from "./LoxInstance"
 
 export default class LoxClass implements LoxCallable {
   readonly name: string
+  readonly superclass: LoxClass
   private readonly methods: Map<string, LoxFunction>
 
-  constructor(name: string, methods: Map<string, LoxFunction>) {
+  constructor(name: string, superclass: LoxClass, methods: Map<string, LoxFunction>) {
     this.name = name
+    this.superclass = superclass
     this.methods = methods
   }
 
@@ -16,6 +18,10 @@ export default class LoxClass implements LoxCallable {
     let method = this.methods.get(name)
 
     if (method) return method
+
+    if (this.superclass) {
+      return this.superclass.findMethod(name)
+    }
 
     return null
   }

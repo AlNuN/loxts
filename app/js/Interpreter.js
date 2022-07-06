@@ -64,6 +64,19 @@ class Interpreter {
         object.set(expr.name, value);
         return value;
     }
+    visitSuperExpr(expr) {
+        let distance = this.locals.get(expr);
+        if (!distance) {
+            throw new RuntimeError_1.default(expr.method, `Undefined property "${expr.method.lexeme}".`);
+        }
+        let superclass = this.environment.getAt(distance, 'super');
+        let object = this.environment.getAt(distance - 1, 'this');
+        let method = superclass.findMethod(expr.method.lexeme);
+        if (!method) {
+            throw new RuntimeError_1.default(expr.method, `Undefined property "${expr.method.lexeme}".`);
+        }
+        return method.bind(object);
+    }
     visitThisExpr(expr) {
         return this.lookUpVariable(expr.keyword, expr);
     }
@@ -151,13 +164,27 @@ class Interpreter {
         return;
     }
     visitClassStmt(stmt) {
+        let superclass = null;
+        if (stmt.superclass) {
+            superclass = this.evaluate(stmt.superclass);
+            if (!(superclass instanceof LoxClass_1.default)) {
+                throw new RuntimeError_1.default(stmt.superclass.name, 'Superclass must be a class.');
+            }
+        }
         this.environment.define(stmt.name.lexeme, null);
+        if (stmt.superclass) {
+            this.environment = new Environment_1.default(this.environment);
+            this.environment.define('super', superclass);
+        }
         let methods = new Map();
         for (let method of stmt.methods) {
             let func = new LoxFunction_1.default(method, this.environment, method.name.lexeme == 'init');
             methods.set(method.name.lexeme, func);
         }
-        const klass = new LoxClass_1.default(stmt.name.lexeme, methods);
+        const klass = new LoxClass_1.default(stmt.name.lexeme, superclass, methods);
+        if (superclass && this.environment.enclosing) {
+            this.environment = this.environment.enclosing;
+        }
         this.environment.assign(stmt.name, klass);
     }
     visitExpressionStmt(stmt) {
