@@ -10,5 +10,5 @@ Clone the repository and then install the dependencies.
 
 You can run the interpreter in 2 ways:
 
-`npm run tsLox` -> cli sandbox environment
+`npm run tsLox` -> cli sandbox environment     
 `npm run tsLox filename.lox` -> run script at `filename.lox`
